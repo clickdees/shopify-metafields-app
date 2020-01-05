@@ -15,11 +15,13 @@ import {
   ContextualSaveBar,
   Frame
 } from "@shopify/polaris";
-import { DeleteMajorMonotone, DeleteMinor } from "@shopify/polaris-icons";
+import { DeleteMinor } from "@shopify/polaris-icons";
+import { Redirect } from "@shopify/app-bridge/actions";
 
 import gql from "graphql-tag";
 import store from "store-js";
 import "./style.css";
+import MetafieldCard from "../components/MetafieldCard";
 
 class EditProduct extends React.Component {
   state = {
@@ -188,72 +190,43 @@ class EditProduct extends React.Component {
   render() {
     console.log(this.state);
     const { title, image, metafields } = this.state;
+    const redirectToProduct = () => {
+      const redirect = Redirect.create(app);
+      redirect.dispatch(Redirect.Action.APP, "/products");
+    };
 
     const card_section = metafields.map((item, index) => {
-      return (
-        <Card.Section subdued={index % 2 != 0} key={item.key}>
-          <h1 className="Polaris-Custom">
-            {item.key}
-            <ButtonGroup>
-              <Button plain>
-                <Icon source={DeleteMinor} />
-              </Button>
-            </ButtonGroup>
-          </h1>
-          <Layout>
-            <Layout.Section oneThird>
-              <TextField value={item.key} label="Key" disabled={true} />
-            </Layout.Section>
-            <Layout.Section oneThird>
-              <TextField
-                value={item.namespace}
-                label="Namespace"
-                disabled={true}
-              />
-            </Layout.Section>
-            <Layout.Section oneThird>
-              <TextField
-                value={item.valueType}
-                label="Value type"
-                disabled={true}
-              />
-            </Layout.Section>
-            <Layout.Section>
-              <TextField
-                value={item.value}
-                onChange={value => this.handleChange(item.key, value)}
-                type={item.valueType == "INTEGER" ? "number" : ""}
-              />
-            </Layout.Section>
-          </Layout>
-        </Card.Section>
-      );
+      return <MetafieldCard item={item} index={index} />;
     });
 
     return (
-      <Frame>
-        <ContextualSaveBar
-          alignContentFlush
-          message="Unsaved changes"
-          saveAction={{
-            onAction: () => console.log("add form submit logic")
-          }}
-          discardAction={{
-            onAction: () => console.log("add clear form logic")
-          }}
-        />
-        <Page
-          breadcrumbs={[{ content: "Products", url: "/products" }]}
-          title={title}
-          thumbnail={<Thumbnail source={image} />}
-        >
-          <Layout>
-            <Layout.Section>
-              <Card>{card_section}</Card>
-            </Layout.Section>
-          </Layout>
-        </Page>
-      </Frame>
+      // <Frame>
+      //   <ContextualSaveBar
+      //     alignContentFlush
+      //     message="Unsaved changes"
+      //     saveAction={{
+      //       onAction: () => console.log("add form submit logic")
+      //     }}
+      //     discardAction={{
+      //       onAction: () => console.log("add clear form logic")
+      //     }}
+      //   />
+      <Page
+        breadcrumbs={[{ content: "Products", url: "/products" }]}
+        title={title}
+        thumbnail={<Thumbnail source={image} />}
+        primaryAction={[
+          { content: "Cancel", id: "btn_cancel" },
+          { content: "Save", id: "btn_save" }
+        ]}
+      >
+        <Layout>
+          <Layout.Section>
+            <Card>{card_section}</Card>
+          </Layout.Section>
+        </Layout>
+      </Page>
+      // </Frame>
     );
   }
 }
