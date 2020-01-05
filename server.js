@@ -1,27 +1,61 @@
-require('isomorphic-fetch');
-const dotenv = require('dotenv');
+require("isomorphic-fetch");
+const dotenv = require("dotenv");
 dotenv.config();
-const Koa = require('koa');
-const next = require('next');
-const { default: createShopifyAuth } = require('@shopify/koa-shopify-auth');
-const { verifyRequest } = require('@shopify/koa-shopify-auth');
-const session = require('koa-session');
-const { default: graphQLProxy } = require('@shopify/koa-shopify-graphql-proxy');
-const { ApiVersion } = require('@shopify/koa-shopify-graphql-proxy');
-const Router = require('koa-router');
-const { receiveWebhook, registerWebhook } = require('@shopify/koa-shopify-webhooks');
-const getSubscriptionUrl = require('./server/getSubscriptionUrl');
+const Koa = require("koa");
+const next = require("next");
+const { default: createShopifyAuth } = require("@shopify/koa-shopify-auth");
+const { verifyRequest } = require("@shopify/koa-shopify-auth");
+const session = require("koa-session");
+const { default: graphQLProxy } = require("@shopify/koa-shopify-graphql-proxy");
+const { ApiVersion } = require("@shopify/koa-shopify-graphql-proxy");
+const Router = require("koa-router");
+const {
+  receiveWebhook,
+  registerWebhook
+} = require("@shopify/koa-shopify-webhooks");
+const getSubscriptionUrl = require("./server/getSubscriptionUrl");
 
 const port = parseInt(process.env.PORT, 10) || 3000;
-const dev = process.env.NODE_ENV !== 'production';
+const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-const {
-  SHOPIFY_API_SECRET_KEY,
-  SHOPIFY_API_KEY,
-  HOST,
-} = process.env;
+//////////////////for domain set up///////////////////
+const fs = require("fs");
+const path = require("path");
+const https = require("https");
+//////////////////////////////////////////////////////
+const httpsOptions = {
+  key: fs.readFileSync("certs/privatekey.key"),
+  cert: fs.readFileSync("certs/9f39cade2c773a92.crt")
+};
+
+const config = {
+  domain: "exploreodin.com", // your domain
+
+  https: {
+    port: 443, // any port that is open and not already used on your server
+
+    options: {
+      key: fs
+        .readFileSync(
+          path.resolve(process.cwd(), "certs/privatekey.key"),
+          "utf8"
+        )
+        .toString(),
+
+      cert: fs
+        .readFileSync(
+          path.resolve(process.cwd(), "certs/9f39cade2c773a92.crt"),
+          "utf8"
+        )
+        .toString()
+    }
+  }
+};
+//////////////////////////////////////////////////////
+
+const { SHOPIFY_API_SECRET_KEY, SHOPIFY_API_KEY, HOST } = process.env;
 
 app.prepare().then(() => {
   const server = new Koa();
@@ -33,25 +67,25 @@ app.prepare().then(() => {
     createShopifyAuth({
       apiKey: SHOPIFY_API_KEY,
       secret: SHOPIFY_API_SECRET_KEY,
-      scopes: ['read_products', 'write_products'],
+      scopes: ["read_products", "write_products"],
       async afterAuth(ctx) {
         const { shop, accessToken } = ctx.session;
         ctx.cookies.set("shopOrigin", shop, { httpOnly: false });
 
         const registration = await registerWebhook({
           address: `${HOST}/webhooks/products/create`,
-          topic: 'PRODUCTS_CREATE',
+          topic: "PRODUCTS_CREATE",
           accessToken,
           shop,
           apiVersion: ApiVersion.October19
         });
 
         if (registration.success) {
-          console.log('Successfully registered webhook!');
+          console.log("Successfully registered webhook!");
         } else {
-          console.log('Failed to register webhook', registration.result);
+          console.log("Failed to register webhook", registration.result);
         }
-        console.log("Token",accessToken);
+        console.log("Token:", accessToken);
         await getSubscriptionUrl(ctx, accessToken, shop);
       }
     })
@@ -59,13 +93,13 @@ app.prepare().then(() => {
 
   const webhook = receiveWebhook({ secret: SHOPIFY_API_SECRET_KEY });
 
-  router.post('/webhooks/products/create', webhook, (ctx) => {
-    console.log('received webhook: ', ctx.state.webhook);
+  router.post("/webhooks/products/create", webhook, ctx => {
+    console.log("received webhook: ", ctx.state.webhook);
   });
 
   server.use(graphQLProxy({ version: ApiVersion.April19 }));
 
-  router.get('*', verifyRequest(), async (ctx) => {
+  router.get("*", verifyRequest(), async ctx => {
     await handle(ctx.req, ctx.res);
     ctx.respond = false;
     ctx.res.statusCode = 200;
@@ -74,7 +108,27 @@ app.prepare().then(() => {
   server.use(router.allowedMethods());
   server.use(router.routes());
 
-  server.listen(port, () => {
-    console.log(`> Ready on http://localhost:${port}`);
-  });
+  // server.listen(port, () => {
+  //   console.log(`> Ready on http://localhost:${port}`);
+  // });
+
+  const serverCallback = server.callback();
+  try {
+    const httpsServer = https.createServer(
+      config.https.options,
+      serverCallback
+    );
+
+    httpsServer.listen(config.https.port, function(err) {
+      if (!!err) {
+        console.error("HTTPS server FAIL: ", err, err && err.stack);
+      } else {
+        console.log(
+          `HTTPS server OK: https://${config.domain}:${config.https.port}`
+        );
+      }
+    });
+  } catch (ex) {
+    console.error("Failed to start HTTPS server\n", ex, ex && ex.stack);
+  }
 });
