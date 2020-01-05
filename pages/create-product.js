@@ -33,10 +33,7 @@ class CreateProduct extends React.Component {
     metafields: [],
     newcount: 0
   };
-  componentDidMount() {
-    this.getItem();
-  }
-  getItem = async () => {
+  async componentDidMount() {
     const item = store.get("item");
     const image = item.images.edges[0]
       ? item.images.edges[0].node.originalSrc
@@ -53,29 +50,7 @@ class CreateProduct extends React.Component {
     });
     console.log("METAFIELDS", metafields);
     this.setState({ price, image, title, id, metafields });
-  };
-
-  Create_Product = async metafields => {
-    const UPDATE_METAFIELDS = JSON.stringify({
-      query: `mutation($input: ProductInput!) {
-				productCreate(input:$input) 
-				{
-					userErrors {
-					  field
-					  message
-					}
-				}
-			}`,
-      variables: {
-        input: {
-          title: "Carrot",
-          metafields: metafields
-        }
-      }
-    });
-    const response = await this.Fetch_GraphQL(UPDATE_METAFIELDS);
-    return response;
-  };
+  }
 
   UpdateMetafields = async (id, metafields) => {
     const UPDATE_METAFIELDS = JSON.stringify({
@@ -97,29 +72,6 @@ class CreateProduct extends React.Component {
     });
     const response = await this.Fetch_GraphQL(UPDATE_METAFIELDS);
     return response;
-  };
-
-  Get_Metafields = async title => {
-    const GET_METAFIELDS = JSON.stringify({
-      query: `{
-				productByHandle(handle: "${title}") {
-				  metafields(first: 10) {
-					edges {
-					  node {
-						key
-						value
-						valueType
-						namespace
-						id
-					  }
-					}
-				  }
-				}
-			}`
-    });
-    const response = await this.Fetch_GraphQL(GET_METAFIELDS);
-
-    return response.data.productByHandle.metafields.edges;
   };
 
   Fetch_GraphQL = async fields => {
