@@ -51,6 +51,7 @@ app.prepare().then(() => {
         } else {
           console.log('Failed to register webhook', registration.result);
         }
+        console.log("Token",accessToken);
         await getSubscriptionUrl(ctx, accessToken, shop);
       }
     })

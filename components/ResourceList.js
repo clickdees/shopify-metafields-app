@@ -11,7 +11,7 @@ import store from "store-js";
 import { Redirect } from "@shopify/app-bridge/actions";
 import { Context } from "@shopify/app-bridge-react";
 
-// const GET_PRODUCTS_BY_ID = gql`
+// const GET_PRODUCTS = gql`
 //   query getProducts($ids: [ID!]!) {
 //     nodes(ids: $ids) {
 //       ... on Product {
@@ -39,7 +39,7 @@ import { Context } from "@shopify/app-bridge-react";
 //     }
 //   }
 // `;
-const GET_PRODUCTS_BY_ID = gql`
+const GET_PRODUCTS = gql`
   query {
     products(first: 10) {
       edges {
@@ -82,7 +82,7 @@ class ResourceListWithProducts extends React.Component {
 
     // const twoWeeksFromNow = new Date(Date.now() + 12096e5).toDateString();
     return (
-      <Query query={GET_PRODUCTS_BY_ID}>
+      <Query query={GET_PRODUCTS}>
         {({ data, loading, error }) => {
           if (loading) {
             return <div>Loading…</div>;
