@@ -9,4 +9,15 @@
     right: 0px;
     top: 0px;
   }
+  #AppFrameMain {
+    padding-top: 4rem;
+    padding-bottom: 6rem;
+  }
+  #btn-cancel {
+    margin-right: 10px;
+  }
+  .right-align {
+    text-align: right;
+    padding: 2rem 0px;
+  }
   
