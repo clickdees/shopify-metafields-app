@@ -17,10 +17,10 @@ import {
 } from "@shopify/polaris";
 import { DeleteMinor } from "@shopify/polaris-icons";
 import { Redirect } from "@shopify/app-bridge/actions";
+import { Context } from "@shopify/app-bridge-react";
 
 import gql from "graphql-tag";
 import store from "store-js";
-import "./style.css";
 import MetafieldCard from "../components/MetafieldCard";
 
 class EditProduct extends React.Component {
@@ -29,22 +29,10 @@ class EditProduct extends React.Component {
     price: "",
     title: "",
     image: "",
-    color: "",
-    type: "",
-    length: "",
-    width: "",
-    height: "",
-    top_finish: "",
-    ends_finish: "",
-    finish: "",
-    created: false,
-    metafields: []
+    metafields: [],
+    newcount: 0
   };
-  componentDidMount() {
-    console.log("TOKEN", API_KEY);
-    this.getItem();
-  }
-  getItem = async () => {
+  async componentDidMount() {
     const item = store.get("item");
     const image = item.images.edges[0]
       ? item.images.edges[0].node.originalSrc
@@ -53,7 +41,7 @@ class EditProduct extends React.Component {
     const title = item.title;
     const id = item.id;
     console.log("TITLE", title);
-    const response = await this.Get_Metafields(title);
+    const response = await this.GetMetaFields(title);
 
     var metafields = [];
     response.forEach(item => {
@@ -61,50 +49,9 @@ class EditProduct extends React.Component {
     });
     console.log("METAFIELDS", metafields);
     this.setState({ price, image, title, id, metafields });
-  };
+  }
 
-  Check_Metafields = async () => {
-    const GET_METAFIELDS = JSON.stringify({
-      query: `{
-				product(id: "gid://shopify/Product/4459432444039") {
-				  metafields(namespace: "global", first: 2) {
-					edges {
-					  node {
-						id
-						namespace
-						key
-						value
-					  }
-					}
-				  }
-				}
-			  }`
-    });
-  };
-
-  Create_Product = async metafields => {
-    const UPDATE_METAFIELDS = JSON.stringify({
-      query: `mutation($input: ProductInput!) {
-				productCreate(input:$input) 
-				{
-					userErrors {
-					  field
-					  message
-					}
-				}
-			}`,
-      variables: {
-        input: {
-          title: "Carrot",
-          metafields: metafields
-        }
-      }
-    });
-    const response = await this.Fetch_GraphQL(UPDATE_METAFIELDS);
-    return response;
-  };
-
-  Update_Metafields = async (id, metafields) => {
+  UpdateMetaFields = async (id, metafields) => {
     const UPDATE_METAFIELDS = JSON.stringify({
       query: `mutation($input: ProductInput!) {
 				productUpdate(input:$input) 
@@ -126,7 +73,7 @@ class EditProduct extends React.Component {
     return response;
   };
 
-  Get_Metafields = async title => {
+  GetMetaFields = async title => {
     const GET_METAFIELDS = JSON.stringify({
       query: `{
 				productByHandle(handle: "${title}") {
@@ -134,10 +81,10 @@ class EditProduct extends React.Component {
 					edges {
 					  node {
 						key
-                        value
-                        valueType
-                        namespace
-                        id
+						value
+						valueType
+						namespace
+						id
 					  }
 					}
 				  }
@@ -165,68 +112,106 @@ class EditProduct extends React.Component {
     return responseJson;
   };
 
-  handleChange = (key, value) => {
+  ValueChange = (id, value) => {
     var metafields = [...this.state.metafields];
-    var index = metafields.findIndex(item => item.key === key);
+    const index = metafields.findIndex(item => item.id === id);
     metafields[index].value = value;
     this.setState({ metafields });
   };
-  handleCreate = async () => {};
+  ValueTypeChange = (id, value) => {
+    var metafields = [...this.state.metafields];
+    const index = metafields.findIndex(item => item.id === id);
+    metafields[index].valueType = value;
+    this.setState({ metafields });
+  };
+  KeyChange = (id, value) => {
+    var metafields = [...this.state.metafields];
+    const index = metafields.findIndex(item => item.id === id);
+    metafields[index].key = value;
+    this.setState({ metafields });
+  };
+  NameSpaceChange = (id, value) => {
+    var metafields = [...this.state.metafields];
+    const index = metafields.findIndex(item => item.id === id);
+    metafields[index].namespace = value;
+    this.setState({ metafields });
+  };
+
+  handleCreate = async () => {
+    var metafields = [...this.state.metafields];
+    const newcount = this.state.newcount;
+    metafields.push({
+      key: "",
+      value: "",
+      valueType: "",
+      namespace: "",
+      id: newcount,
+      enabled: true
+    });
+    this.setState({ metafields, newcount: newcount + 1 });
+  };
 
   handleSave = async () => {
     console.log("Save clicked");
     const { metafields, id } = this.state;
-    var ar_metafields = [];
+    var up_metafields = [];
 
     metafields.map(item => {
-      ar_metafields.push({ id: item.id, value: item.value });
+      item.enabled === undefined
+        ? up_metafields.push({ id: item.id, value: item.value })
+        : up_metafields.push({
+            key: item.key,
+            value: item.value,
+            valueType: item.valueType,
+            namespace: item.namespace
+          });
     });
-    console.log("AR_METAFIELS", ar_metafields);
+    console.log("AR_METAFIELS", up_metafields);
 
-    const response = await this.Update_Metafields(id, ar_metafields);
+    const response = await this.UpdateMetaFields(id, up_metafields);
     console.log("SET RESPONSE", response);
   };
 
+  static contextType = Context;
   render() {
     console.log(this.state);
     const { title, image, metafields } = this.state;
+
+    const app = this.context;
     const redirectToProduct = () => {
       const redirect = Redirect.create(app);
       redirect.dispatch(Redirect.Action.APP, "/products");
     };
 
     const card_section = metafields.map((item, index) => {
-      return <MetafieldCard item={item} index={index} />;
+      return (
+        <MetafieldCard
+          item={item}
+          index={index}
+          key={item.id}
+          ValueChange={this.ValueChange}
+          ValueTypeChange={this.ValueTypeChange}
+          KeyChange={this.KeyChange}
+          NameSpaceChange={this.NameSpaceChange}
+        />
+      );
     });
 
     return (
-      // <Frame>
-      //   <ContextualSaveBar
-      //     alignContentFlush
-      //     message="Unsaved changes"
-      //     saveAction={{
-      //       onAction: () => console.log("add form submit logic")
-      //     }}
-      //     discardAction={{
-      //       onAction: () => console.log("add clear form logic")
-      //     }}
-      //   />
       <Page
-        breadcrumbs={[{ content: "Products", url: "/products" }]}
+        breadcrumbs={[{ content: "Products", onAction: redirectToProduct }]}
         title={title}
         thumbnail={<Thumbnail source={image} />}
         primaryAction={[
-          { content: "Cancel", id: "btn_cancel" },
-          { content: "Save", id: "btn_save" }
+          { content: "Cancel", id: "btn-cancel", onAction: redirectToProduct },
+          { content: "Save", id: "btn-save", onAction: this.handleSave }
         ]}
       >
-        <Layout>
-          <Layout.Section>
-            <Card>{card_section}</Card>
-          </Layout.Section>
-        </Layout>
+        <Card>{card_section}</Card>
+        <div className="right-align">
+          <Button onClick={this.handleCreate}>Create metafield</Button>
+        </div>
       </Page>
-      // </Frame>
     );
   }
 }
