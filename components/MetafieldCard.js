@@ -18,11 +18,18 @@ import {
   
   class MetafieldCard extends React.Component {
     render() {
-      const { index, item } = this.props;
+      const {
+        index,
+        item,
+        ValueChange,
+        ValueTypeChange,
+        KeyChange,
+        NameSpaceChange
+      } = this.props;
       return (
-        <Card.Section subdued={index % 2 != 0} key={item.key}>
+        <Card.Section subdued={index % 2 != 0}>
           <h1 className="Polaris-Custom">
-            {item.key}
+            {item.key === "" ? "Unnamed Metafield" : item.key}
             <ButtonGroup>
               <Button plain>
                 <Icon source={DeleteMinor} />
@@ -31,27 +38,34 @@ import {
           </h1>
           <Layout>
             <Layout.Section oneThird>
-              <TextField value={item.key} label="Key" disabled={true} />
+              <TextField
+                value={item.key}
+                onChange={value => KeyChange(item.id, value)}
+                label="Key"
+                disabled={item.enabled === undefined}
+              />
             </Layout.Section>
             <Layout.Section oneThird>
               <TextField
                 value={item.namespace}
+                onChange={value => NameSpaceChange(item.id, value)}
                 label="Namespace"
-                disabled={true}
+                disabled={item.enabled === undefined}
               />
             </Layout.Section>
             <Layout.Section oneThird>
               <TextField
                 value={item.valueType}
+                onChange={value => ValueTypeChange(item.id, value)}
                 label="Value type"
-                disabled={true}
+                disabled={item.enabled === undefined}
               />
             </Layout.Section>
             <Layout.Section>
               <TextField
                 value={item.value}
-                onChange={value => this.handleChange(item.key, value)}
-                type={item.valueType == "INTEGER" ? "number" : ""}
+                onChange={value => ValueChange(item.id, value)}
+                type={item.valueType === "INTEGER" ? "number" : ""}
               />
             </Layout.Section>
           </Layout>
