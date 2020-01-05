@@ -1,175 +1,69 @@
 import React from "react";
 import {
-	Card,
-	List,
-	Page,
-	Thumbnail,
-	TextField,
-	Layout
+  Card,
+  List,
+  Page,
+  Thumbnail,
+  TextField,
+  Layout,
+  Button,
+  Heading,
+  Subheading,
+  ButtonGroup,
+  Icon,
+  AppProvider,
+  ContextualSaveBar,
+  Frame
 } from "@shopify/polaris";
+import { DeleteMajorMonotone, DeleteMinor } from "@shopify/polaris-icons";
+
 import gql from "graphql-tag";
 import store from "store-js";
-
-
-
-
-
+import "./style.css";
 
 class EditProduct extends React.Component {
-	state = {
-		id: '',
-		price: "",
-		title: "",
-		image: "",
-		color: "",
-		type: "",
-		length: "",
-		width: "",
-		height: "",
-		top_finish: "",
-		ends_finish: "",
-		finish: "",
-		created: false,
-	};
-	async componentDidMount() {
-		await this.getItem();
+  state = {
+    id: "",
+    price: "",
+    title: "",
+    image: "",
+    color: "",
+    type: "",
+    length: "",
+    width: "",
+    height: "",
+    top_finish: "",
+    ends_finish: "",
+    finish: "",
+    created: false,
+    metafields: []
+  };
+  componentDidMount() {
+    console.log("TOKEN", API_KEY);
+    this.getItem();
+  }
+  getItem = async () => {
+    const item = store.get("item");
+    const image = item.images.edges[0]
+      ? item.images.edges[0].node.originalSrc
+      : "";
+    const price = item.variants.edges[0].node.price;
+    const title = item.title;
+    const id = item.id;
+    console.log("TITLE", title);
+    const response = await this.Get_Metafields(title);
 
-	}
-	handleChange = (name, value) => {
-		this.setState({ [name]: value });
-	};
-	handleCreate = async() => {
-		// const {
-		// 	color,
-		// 	type,
-		// 	length,
-		// 	width,
-		// 	height,
-		// 	top_finish,
-		// 	ends_finish,
-		// 	finish
-		// } = this.state;
-		// const metafields = [{
-		// 	namespace: "global",
-		// 	key: "Granite Color",
-		// 	valueType: "STRING",
-		// 	value: color
-		//   },
-		//   {
-		// 	namespace: "global",
-		// 	key: "Product Type",
-		// 	valueType: "STRING",
-		// 	value: type
-		//   },
-		//   {
-		// 	namespace: "global",
-		// 	key: "Length",
-		// 	valueType: "INTEGER",
-		// 	value: length
-		//   },
-		//   {
-		// 	namespace: "global",
-		// 	key: "Width",
-		// 	valueType: "INTEGER",
-		// 	value: width
-		//   },
-		//   {
-		// 	namespace: "global",
-		// 	key: "Height",
-		// 	valueType: "INTEGER",
-		// 	value: height
-		//   },
-		//   {
-		// 	namespace: "global",
-		// 	key: "Top Finish",
-		// 	valueType: "STRING",
-		// 	value: top_finish
-		//   },
-		//   {
-		// 	namespace: "global",
-		// 	key: "Ends Finish",
-		// 	valueType: "STRING",
-		// 	value: ends_finish
-		//   },
-		//   {
-		// 	namespace: "global",
-		// 	key: "Finish",
-		// 	valueType: "STRING",
-		// 	value: finish
-		//   }];
-		  
-		// const metafields1 = await this.update_metafields(metafields);
-		// console.log("SET RESPONSE",metafields1);
-	}
+    var metafields = [];
+    response.forEach(item => {
+      metafields.push(item.node);
+    });
+    console.log("METAFIELDS", metafields);
+    this.setState({ price, image, title, id, metafields });
+  };
 
-	handleSave = async () => {
-		console.log("Save clicked");
-		const {
-			id,
-			color,
-			type,
-			length,
-			width,
-			height,
-			top_finish,
-			ends_finish,
-			finish
-		} = this.state;
-		const metafields = [{
-			namespace: "global",
-			key: "Granite Color",
-			valueType: "STRING",
-			value: color
-		  },
-		  {
-			namespace: "global",
-			key: "Product Type",
-			valueType: "STRING",
-			value: type
-		  },
-		  {
-			namespace: "global",
-			key: "Length",
-			valueType: "INTEGER",
-			value: length
-		  },
-		  {
-			namespace: "global",
-			key: "Width",
-			valueType: "INTEGER",
-			value: width
-		  },
-		  {
-			namespace: "global",
-			key: "Height",
-			valueType: "INTEGER",
-			value: height
-		  },
-		  {
-			namespace: "global",
-			key: "Top Finish",
-			valueType: "STRING",
-			value: top_finish
-		  },
-		  {
-			namespace: "global",
-			key: "Ends Finish",
-			valueType: "STRING",
-			value: ends_finish
-		  },
-		  {
-			namespace: "global",
-			key: "Finish",
-			valueType: "STRING",
-			value: finish
-		  }];
-		  
-		const response = await this.update_metafields(id, metafields);
-		console.log("SET RESPONSE",response);
-	}
-	check_for_metafields = async() => {
-		const GET_METAFIELDS = JSON.stringify({
-			query:`{
+  Check_Metafields = async () => {
+    const GET_METAFIELDS = JSON.stringify({
+      query: `{
 				product(id: "gid://shopify/Product/4459432444039") {
 				  metafields(namespace: "global", first: 2) {
 					edges {
@@ -183,26 +77,12 @@ class EditProduct extends React.Component {
 				  }
 				}
 			  }`
-		})
-	}
-	getItem = async () => {
-		const item = store.get("item");
-		const image = item.images.edges[0]
-			? item.images.edges[0].node.originalSrc
-			: "";
-		const price = item.variants.edges[0].node.price;
-		const title = item.title;
-		const id = item.id;
-		
-		const metafields = await this.get_metafields(title);
-		console.log("GET RESPONSE",metafields);
+    });
+  };
 
-		this.setState({ price, image, title, id });
-	};
-
-	create_product = async (metafields) => {
-		const UPDATE_METAFIELDS = JSON.stringify({
-			query:`mutation($input: ProductInput!) {
+  Create_Product = async metafields => {
+    const UPDATE_METAFIELDS = JSON.stringify({
+      query: `mutation($input: ProductInput!) {
 				productCreate(input:$input) 
 				{
 					userErrors {
@@ -211,30 +91,20 @@ class EditProduct extends React.Component {
 					}
 				}
 			}`,
-			variables:{
-				"input":{
-					"title":"Carrot",
-					"metafields": metafields
-				}
-			}
-		})
+      variables: {
+        input: {
+          title: "Carrot",
+          metafields: metafields
+        }
+      }
+    });
+    const response = await this.Fetch_GraphQL(UPDATE_METAFIELDS);
+    return response;
+  };
 
-
-		const response = await fetch(`https://cors-anywhere.herokuapp.com/https://granitedevstore2.myshopify.com/admin/api/2019-07/graphql.json`, {
-			method: 'POST',
-			headers: {
-			  'Content-Type': 'application/json',
-			  "X-Shopify-Access-Token": 'd54c116c44690af467e3aaedcb22ee59',
-			},
-			body: UPDATE_METAFIELDS
-		  });
-		const responseJson = await response.json();
-		return responseJson;
-	}
-
-	update_metafields = async (id, metafields) => {
-		const UPDATE_METAFIELDS = JSON.stringify({
-			query:`mutation($input: ProductInput!) {
+  Update_Metafields = async (id, metafields) => {
+    const UPDATE_METAFIELDS = JSON.stringify({
+      query: `mutation($input: ProductInput!) {
 				productUpdate(input:$input) 
 				{
 					userErrors {
@@ -243,139 +113,149 @@ class EditProduct extends React.Component {
 					}
 				}
 			}`,
-			variables:{
-				"input":{
-					"id": id,
-					"metafields": metafields
-				}
-			}
-		})
+      variables: {
+        input: {
+          id: id,
+          metafields: metafields
+        }
+      }
+    });
+    const response = await this.Fetch_GraphQL(UPDATE_METAFIELDS);
+    return response;
+  };
 
-
-		const response = await fetch(`https://cors-anywhere.herokuapp.com/https://granitedevstore2.myshopify.com/admin/api/2019-07/graphql.json`, {
-			method: 'POST',
-			headers: {
-			  'Content-Type': 'application/json',
-			  "X-Shopify-Access-Token": 'd54c116c44690af467e3aaedcb22ee59',
-			},
-			body: UPDATE_METAFIELDS
-		  });
-		const responseJson = await response.json();
-		return responseJson;
-	}
-
-	get_metafields = async (title) => {
-		const GET_METAFIELDS = JSON.stringify({
-			query:`{
+  Get_Metafields = async title => {
+    const GET_METAFIELDS = JSON.stringify({
+      query: `{
 				productByHandle(handle: "${title}") {
 				  metafields(first: 10) {
 					edges {
 					  node {
 						key
-						value
+                        value
+                        valueType
+                        namespace
+                        id
 					  }
 					}
 				  }
 				}
 			}`
-		})
+    });
+    const response = await this.Fetch_GraphQL(GET_METAFIELDS);
 
-		const response = await fetch(`https://cors-anywhere.herokuapp.com/https://granitedevstore2.myshopify.com/admin/api/2019-07/graphql.json`, {
-			method: 'POST',
-			headers: {
-			  'Content-Type': 'application/json',
-			  "X-Shopify-Access-Token": 'd54c116c44690af467e3aaedcb22ee59',
-			},
-			body: GET_METAFIELDS
-		  });
-		const responseJson = await response.json();
-		return responseJson.data.productByHandle.metafields.edges;
-	}
+    return response.data.productByHandle.metafields.edges;
+  };
 
-	render() {
-		console.log(this.state);
-		const {
-			title,
-			image,
-			color,
-			type,
-			length,
-			width,
-			height,
-			top_finish,
-			ends_finish,
-			finish
-		} = this.state;
-		return (
-			<Page
-				breadcrumbs={[{ content: "Products", url: "/products" }]}
-				title={title}
-				thumbnail={<Thumbnail source={image} />}
-				primaryAction={{ content: "Save", onAction: this.handleSave }}
-			>
-				<Layout>
-					<Layout.Section>
-						<Card>
-							<Card.Section title="Granite Color">
-								<TextField
-									value={color}
-									onChange={value => this.handleChange("color", value)}
-								/>
-							</Card.Section>
+  Fetch_GraphQL = async fields => {
+    const response = await fetch(
+      `https://cors-anywhere.herokuapp.com/https://granitedevstore2.myshopify.com/admin/api/2019-07/graphql.json`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Shopify-Access-Token": ACCESS_TOKEN
+        },
+        body: fields
+      }
+    );
+    const responseJson = await response.json();
+    return responseJson;
+  };
 
-							<Card.Section subdued title="Product Type">
-								<TextField
-									value={type}
-									onChange={value => this.handleChange("type", value)}
-								/>
-							</Card.Section>
-							<Card.Section title="Length">
-								<TextField
-									value={length}
-									type="number"
-									onChange={value => this.handleChange("length", value)}
-								/>
-							</Card.Section>
+  handleChange = (key, value) => {
+    var metafields = [...this.state.metafields];
+    var index = metafields.findIndex(item => item.key === key);
+    metafields[index].value = value;
+    this.setState({ metafields });
+  };
+  handleCreate = async () => {};
 
-							<Card.Section subdued title="Width">
-								<TextField
-									value={width}
-									type="number"
-									onChange={value => this.handleChange("width", value)}
-								/>
-							</Card.Section>
-							<Card.Section title="Height">
-								<TextField
-									value={height}
-									type="number"
-									onChange={value => this.handleChange("height", value)}
-								/>
-							</Card.Section>
-							<Card.Section subdued title="Top Finish">
-								<TextField
-									value={top_finish}
-									onChange={value => this.handleChange("top_finish", value)}
-								/>
-							</Card.Section>
-							<Card.Section title="Ends Finish">
-								<TextField
-									value={ends_finish}
-									onChange={value => this.handleChange("ends_finish", value)}
-								/>
-							</Card.Section>
+  handleSave = async () => {
+    console.log("Save clicked");
+    const { metafields, id } = this.state;
+    var ar_metafields = [];
 
-							<Card.Section subdued title="Finish">
-								<TextField
-									value={finish}
-									onChange={value => this.handleChange("finish", value)}
-								/>
-							</Card.Section>
-						</Card>
-					</Layout.Section>
-				</Layout>
-			</Page>
-		);
-	}
+    metafields.map(item => {
+      ar_metafields.push({ id: item.id, value: item.value });
+    });
+    console.log("AR_METAFIELS", ar_metafields);
+
+    const response = await this.Update_Metafields(id, ar_metafields);
+    console.log("SET RESPONSE", response);
+  };
+
+  render() {
+    console.log(this.state);
+    const { title, image, metafields } = this.state;
+
+    const card_section = metafields.map((item, index) => {
+      return (
+        <Card.Section subdued={index % 2 != 0} key={item.key}>
+          <h1 className="Polaris-Custom">
+            {item.key}
+            <ButtonGroup>
+              <Button plain>
+                <Icon source={DeleteMinor} />
+              </Button>
+            </ButtonGroup>
+          </h1>
+          <Layout>
+            <Layout.Section oneThird>
+              <TextField value={item.key} label="Key" disabled={true} />
+            </Layout.Section>
+            <Layout.Section oneThird>
+              <TextField
+                value={item.namespace}
+                label="Namespace"
+                disabled={true}
+              />
+            </Layout.Section>
+            <Layout.Section oneThird>
+              <TextField
+                value={item.valueType}
+                label="Value type"
+                disabled={true}
+              />
+            </Layout.Section>
+            <Layout.Section>
+              <TextField
+                value={item.value}
+                onChange={value => this.handleChange(item.key, value)}
+                type={item.valueType == "INTEGER" ? "number" : ""}
+              />
+            </Layout.Section>
+          </Layout>
+        </Card.Section>
+      );
+    });
+
+    return (
+      <Frame>
+        <ContextualSaveBar
+          alignContentFlush
+          message="Unsaved changes"
+          saveAction={{
+            onAction: () => console.log("add form submit logic")
+          }}
+          discardAction={{
+            onAction: () => console.log("add clear form logic")
+          }}
+        />
+        <Page
+          breadcrumbs={[{ content: "Products", url: "/products" }]}
+          title={title}
+          thumbnail={<Thumbnail source={image} />}
+        >
+          <Layout>
+            <Layout.Section>
+              <Card>{card_section}</Card>
+            </Layout.Section>
+          </Layout>
+        </Page>
+      </Frame>
+    );
+  }
 }
 
 export default EditProduct;
