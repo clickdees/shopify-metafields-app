@@ -28,6 +28,7 @@ import Cookies from "js-cookie";
 const ACCESSTOKEN = Cookies.get("ACCESSTOKEN");
 
 class CreateProduct extends React.Component {
+  static contextType = Context;
   state = {
     price: "",
     title: "",
@@ -215,18 +216,15 @@ class CreateProduct extends React.Component {
     });
     const response = await this.Fetch_GraphQL(UPDATE_METAFIELDS);
     console.log(response);
+    this.redirectToProduct();
   };
-
-  static contextType = Context;
+  redirectToProduct = () => {
+    const app = this.context;
+    const redirect = Redirect.create(app);
+    redirect.dispatch(Redirect.Action.APP, "/index");
+  };
   render() {
     const { title, metafields, description } = this.state;
-
-    const app = this.context;
-
-    const redirectToProduct = () => {
-      const redirect = Redirect.create(app);
-      redirect.dispatch(Redirect.Action.APP, "/products");
-    };
     const card_section = metafields.map((item, index) => {
       return (
         <MetafieldCard
@@ -243,11 +241,17 @@ class CreateProduct extends React.Component {
 
     return (
       <Page
-        breadcrumbs={[{ content: "Products", onAction: redirectToProduct }]}
+        breadcrumbs={[
+          { content: "Products", onAction: this.redirectToProduct }
+        ]}
         title={title === "" ? "Unnamed Product" : title}
         primaryAction={[
-          { content: "Cancel", id: "btn-cancel", onAction: redirectToProduct },
-          { content: "Save", id: "btn-save", onAction: this.handleSave }
+          { content: "Save", id: "btn-save", onAction: this.handleSave },
+          {
+            content: "Cancel",
+            id: "btn-cancel",
+            onAction: this.redirectToProduct
+          }
         ]}
       >
         <Card>
@@ -270,7 +274,13 @@ class CreateProduct extends React.Component {
         <Card>{card_section}</Card>
 
         <div className="right-align">
-          <Button onClick={this.handleCreate}>Create metafield</Button>
+          <ButtonGroup>
+            <Button primary onClick={this.handleSave}>
+              Save
+            </Button>
+            <Button onClick={this.redirectToProduct}>Cancel</Button>
+            <Button onClick={this.handleCreate}>Create metafield</Button>
+          </ButtonGroup>
         </div>
       </Page>
       // </Frame>
