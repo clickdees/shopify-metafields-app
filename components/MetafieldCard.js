@@ -30,11 +30,11 @@ import {
         <Card.Section subdued={index % 2 != 0}>
           <h1 className="Polaris-Custom">
             {item.key === "" ? "Unnamed Metafield" : item.key}
-            <ButtonGroup>
+            {/* <ButtonGroup>
               <Button plain>
                 <Icon source={DeleteMinor} />
               </Button>
-            </ButtonGroup>
+            </ButtonGroup> */}
           </h1>
           <Layout>
             <Layout.Section oneThird>
