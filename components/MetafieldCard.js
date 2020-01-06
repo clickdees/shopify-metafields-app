@@ -21,10 +21,10 @@ import {
       const {
         index,
         item,
-        ValueChange,
-        ValueTypeChange,
-        KeyChange,
-        NameSpaceChange
+        valueChange,
+        valuetypeChange,
+        keyChange,
+        namespaceChange
       } = this.props;
       return (
         <Card.Section subdued={index % 2 != 0}>
@@ -40,7 +40,7 @@ import {
             <Layout.Section oneThird>
               <TextField
                 value={item.key}
-                onChange={value => KeyChange(item.id, value)}
+                onChange={value => keyChange(item.id, value)}
                 label="Key"
                 disabled={item.enabled === undefined}
               />
@@ -48,7 +48,7 @@ import {
             <Layout.Section oneThird>
               <TextField
                 value={item.namespace}
-                onChange={value => NameSpaceChange(item.id, value)}
+                onChange={value => namespaceChange(item.id, value)}
                 label="Namespace"
                 disabled={item.enabled === undefined}
               />
@@ -56,7 +56,7 @@ import {
             <Layout.Section oneThird>
               <TextField
                 value={item.valueType}
-                onChange={value => ValueTypeChange(item.id, value)}
+                onChange={value => valuetypeChange(item.id, value)}
                 label="Value type"
                 disabled={item.enabled === undefined}
               />
@@ -64,7 +64,7 @@ import {
             <Layout.Section>
               <TextField
                 value={item.value}
-                onChange={value => ValueChange(item.id, value)}
+                onChange={value => valueChange(item.id, value)}
                 type={item.valueType === "INTEGER" ? "number" : ""}
               />
             </Layout.Section>
