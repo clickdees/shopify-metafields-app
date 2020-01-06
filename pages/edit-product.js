@@ -22,9 +22,6 @@ import { Context } from "@shopify/app-bridge-react";
 import gql from "graphql-tag";
 import store from "store-js";
 import MetafieldCard from "../components/MetafieldCard";
-import Cookies from "js-cookie";
-
-const ACCESSTOKEN = Cookies.get("ACCESSTOKEN");
 
 class EditProduct extends React.Component {
   state = {
@@ -106,7 +103,7 @@ class EditProduct extends React.Component {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Shopify-Access-Token": ACCESSTOKEN
+          "X-Shopify-Access-Token": ACCESS_TOKEN
         },
         body: fields
       }
@@ -115,25 +112,25 @@ class EditProduct extends React.Component {
     return responseJson;
   };
 
-  valueChange = (id, value) => {
+  ValueChange = (id, value) => {
     var metafields = [...this.state.metafields];
     const index = metafields.findIndex(item => item.id === id);
     metafields[index].value = value;
     this.setState({ metafields });
   };
-  valuetypeChange = (id, value) => {
+  ValueTypeChange = (id, value) => {
     var metafields = [...this.state.metafields];
     const index = metafields.findIndex(item => item.id === id);
     metafields[index].valueType = value;
     this.setState({ metafields });
   };
-  keyChange = (id, value) => {
+  KeyChange = (id, value) => {
     var metafields = [...this.state.metafields];
     const index = metafields.findIndex(item => item.id === id);
     metafields[index].key = value;
     this.setState({ metafields });
   };
-  namespaceChange = (id, value) => {
+  NameSpaceChange = (id, value) => {
     var metafields = [...this.state.metafields];
     const index = metafields.findIndex(item => item.id === id);
     metafields[index].namespace = value;
@@ -192,10 +189,10 @@ class EditProduct extends React.Component {
           item={item}
           index={index}
           key={item.id}
-          valueChange={this.valueChange}
-          valuetypeChange={this.valuetypeChange}
-          keyChange={this.keyChange}
-          namespaceChange={this.namespaceChange}
+          ValueChange={this.ValueChange}
+          ValueTypeChange={this.ValueTypeChange}
+          KeyChange={this.KeyChange}
+          NameSpaceChange={this.NameSpaceChange}
         />
       );
     });
