@@ -90,7 +90,7 @@ class ResourceListWithProducts extends React.Component {
           if (error) {
             return <div>{error.message}</div>;
           }
-          console.log(data.products.edges);
+          console.log(data);
           return (
             <Card>
               <ResourceList
